@@ -1,4 +1,4 @@
-# ble_print
+# BLE Print (Bluetooth Low Energy) 
 BLE Print is a Flutter plugin to bluetooth thermal printer.
 
 ### Goals 🎯
