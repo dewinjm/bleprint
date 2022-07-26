@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - ".github/workflows/bleprint.yaml"
-      - "src/bleprint/**"
+      - "bleprint/**"
   push:
     branches:
       - main
     paths:
       - ".github/workflows/bleprint.yaml"
-      - "src/bleprint/**"
+      - "bleprint/**"
 
 jobs:
   build:
@@ -18,14 +18,14 @@ jobs:
     with:
       flutter_channel: stable
       flutter_version: 3.0.0
-      working_directory: src/bleprint
+      working_directory: bleprint
 
   android:
     runs-on: macos-latest
 
     defaults:
       run:
-        working-directory: src/bleprint/example
+        working-directory: bleprint/example
 
     steps:
       - uses: actions/checkout@v2
@@ -63,14 +63,14 @@ jobs:
         with:
           api-level: 29
           script: flutter test integration_test
-          working-directory: src/bleprint/example
+          working-directory: bleprint/example
 
   ios:
     runs-on: macos-latest
 
     defaults:
       run:
-        working-directory: src/bleprint/example
+        working-directory: bleprint/example
 
     steps:
       - uses: actions/checkout@v2
