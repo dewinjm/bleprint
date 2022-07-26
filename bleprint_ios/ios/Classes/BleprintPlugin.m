@@ -1,18 +1,15 @@
 #import "BleprintPlugin.h"
+#if __has_include(<bleprint_ios/bleprint_ios-Swift.h>)
+#import <bleprint_ios/bleprint_ios-Swift.h>
+#else
+// Support project import fallback if the generated compatibility header
+// is not copied when this plugin is created as a library.
+// https://forums.swift.org/t/swift-static-libraries-dont-copy-generated-objective-c-header/19816
+#import "bleprint_ios-Swift.h"
+#endif
 
 @implementation BleprintPlugin
-
-+ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
-  FlutterMethodChannel *channel =
-      [FlutterMethodChannel methodChannelWithName:@"bleprint_ios"
-                                  binaryMessenger:registrar.messenger];
-  [channel setMethodCallHandler:^(FlutterMethodCall *call, FlutterResult result) {
-    if ([@"getPlatformName" isEqualToString:call.method]) {
-      result(@"iOS");
-    } else {
-      result(FlutterMethodNotImplemented);
-    }
-  }];
++ (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
+  [SwiftBleprintPlugin registerWithRegistrar:registrar];
 }
-
 @end
