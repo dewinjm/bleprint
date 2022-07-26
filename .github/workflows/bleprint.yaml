@@ -1,0 +1,87 @@
+name: bleprint
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/bleprint.yaml"
+      - "src/bleprint/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/bleprint.yaml"
+      - "src/bleprint/**"
+
+jobs:
+  build:
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/flutter_package.yml@v1
+    with:
+      flutter_channel: stable
+      flutter_version: 3.0.0
+      working_directory: src/bleprint
+
+  android:
+    runs-on: macos-latest
+
+    defaults:
+      run:
+        working-directory: src/bleprint/example
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v2
+        with:
+          distribution: "temurin"
+          java-version: "11"
+
+      - uses: subosito/flutter-action@v2
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: AVD Cache
+        uses: actions/cache@v2
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-29
+
+      - name: Cache AVD Snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Integration Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          script: flutter test integration_test
+          working-directory: src/bleprint/example
+
+  ios:
+    runs-on: macos-latest
+
+    defaults:
+      run:
+        working-directory: src/bleprint/example
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: subosito/flutter-action@v2
+
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      - name: Start Simulator
+        run: open -a Simulator.app
+
+      - name: Integration Tests
+        run: flutter test integration_test -d iPhone

@@ -1,0 +1,29 @@
+name: bleprint_android
+description: Android implementation of the bleprint plugin
+version: 0.0.1-dev.1
+publish_to: none
+
+environment:
+  sdk: ">=2.17.0 <3.0.0"
+  flutter: ">=3.0.0"
+
+flutter:
+  plugin:
+    implements: bleprint
+    platforms:
+      android:
+        package: com.dewinjm.bleprint
+        pluginClass: BleprintPlugin
+        dartPluginClass: BleprintAndroid
+
+dependencies:
+  bleprint_platform_interface:
+    path: ../bleprint_platform_interface
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.0
+  very_good_analysis: ^3.0.1
