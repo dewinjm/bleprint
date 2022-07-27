@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/src/method_channel_bleprint.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +22,12 @@ void main() {
           switch (methodCall.method) {
             case 'getPlatformName':
               return kPlatformName;
+            case 'scan':
+              return Future.value();
+            case 'isAvailable':
+              return true;
+            case 'isEnabled':
+              return true;
             default:
               return null;
           }
@@ -39,6 +43,29 @@ void main() {
         <Matcher>[isMethodCall('getPlatformName', arguments: null)],
       );
       expect(platformName, equals(kPlatformName));
+    });
+
+    test('scan', () async {
+      await methodChannelBleprint.scan(duration: 1000);
+
+      expect(
+        log,
+        <Matcher>[isMethodCall('scan', arguments: null)],
+      );
+    });
+
+    test('isAvailable', () async {
+      final value = await methodChannelBleprint.isAvailable;
+
+      expect(log, <Matcher>[isMethodCall('isAvailable', arguments: null)]);
+      expect(value, isTrue);
+    });
+
+    test('isEnabled', () async {
+      final value = await methodChannelBleprint.isEnabled;
+
+      expect(log, <Matcher>[isMethodCall('isEnabled', arguments: null)]);
+      expect(value, isTrue);
     });
   });
 }

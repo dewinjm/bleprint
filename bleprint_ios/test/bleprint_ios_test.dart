@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_ios/bleprint_ios.dart';
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
@@ -20,14 +18,21 @@ void main() {
 
     setUp(() async {
       bleprint = BleprintIOS();
-
       log = <MethodCall>[];
+
       TestDefaultBinaryMessengerBinding.instance!.defaultBinaryMessenger
           .setMockMethodCallHandler(bleprint.methodChannel, (methodCall) async {
         log.add(methodCall);
+
         switch (methodCall.method) {
           case 'getPlatformName':
             return kPlatformName;
+          case 'scan':
+            return Future.value();
+          case 'isAvailable':
+            return true;
+          case 'isEnabled':
+            return true;
           default:
             return null;
         }
@@ -46,6 +51,34 @@ void main() {
         <Matcher>[isMethodCall('getPlatformName', arguments: null)],
       );
       expect(name, equals(kPlatformName));
+    });
+
+    test('verify to scan is called', () async {
+      const duration = 1000;
+      await bleprint.scan(duration: duration);
+
+      expect(
+        log,
+        <Matcher>[isMethodCall('scan', arguments: duration)],
+      );
+    });
+
+    test('isAvailable returns correct value', () async {
+      final value = await bleprint.isAvailable;
+      expect(
+        log,
+        <Matcher>[isMethodCall('isAvailable', arguments: null)],
+      );
+      expect(value, isTrue);
+    });
+
+    test('isEnabled returns correct value', () async {
+      final value = await bleprint.isEnabled;
+      expect(
+        log,
+        <Matcher>[isMethodCall('isEnabled', arguments: null)],
+      );
+      expect(value, isTrue);
     });
   });
 }

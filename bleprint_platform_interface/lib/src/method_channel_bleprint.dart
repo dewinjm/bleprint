@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -16,7 +14,22 @@ class MethodChannelBleprint extends BleprintPlatform {
   final methodChannel = const MethodChannel('bleprint');
 
   @override
-  Future<String?> getPlatformName() {
+  Future<String?> getPlatformName() async {
     return methodChannel.invokeMethod<String>('getPlatformName');
   }
+
+  @override
+  Future<void> scan({required int duration}) async {
+    return methodChannel.invokeMethod('scan');
+  }
+
+  @override
+  Future<bool> get isAvailable async => methodChannel
+      .invokeMethod<bool>('isAvailable')
+      .then((value) => value ?? false);
+
+  @override
+  Future<bool> get isEnabled async => methodChannel
+      .invokeMethod<bool>('isEnabled')
+      .then((value) => value ?? false);
 }

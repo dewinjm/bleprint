@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,10 +11,20 @@ class BleprintMock extends BleprintPlatform {
 
   @override
   Future<String?> getPlatformName() async => mockPlatformName;
+
+  @override
+  Future<void> scan({required int duration}) async {}
+
+  @override
+  Future<bool> get isAvailable async => true;
+
+  @override
+  Future<bool> get isEnabled async => true;
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
   group('BleprintPlatformInterface', () {
     late BleprintPlatform bleprintPlatform;
 
@@ -31,6 +39,27 @@ void main() {
           await BleprintPlatform.instance.getPlatformName(),
           equals(BleprintMock.mockPlatformName),
         );
+      });
+    });
+
+    group('scan', () {
+      test('verify it is called', () async {
+        expect(
+          BleprintPlatform.instance.scan(duration: 1000),
+          completes,
+        );
+      });
+    });
+
+    group('isAvailable', () {
+      test('should return true', () async {
+        expect(await BleprintPlatform.instance.isAvailable, isTrue);
+      });
+    });
+
+    group('isEnabled', () {
+      test('should return true', () async {
+        expect(await BleprintPlatform.instance.isEnabled, isTrue);
       });
     });
   });
