@@ -14,6 +14,12 @@ class BleprintMock extends BleprintPlatform {
 
   @override
   Future<void> scan({required int duration}) async {}
+
+  @override
+  Future<bool> get isAvailable async => true;
+
+  @override
+  Future<bool> get isEnabled async => true;
 }
 
 void main() {
@@ -42,6 +48,18 @@ void main() {
           BleprintPlatform.instance.scan(duration: 1000),
           completes,
         );
+      });
+    });
+
+    group('isAvailable', () {
+      test('should return true', () async {
+        expect(await BleprintPlatform.instance.isAvailable, isTrue);
+      });
+    });
+
+    group('isEnabled', () {
+      test('should return true', () async {
+        expect(await BleprintPlatform.instance.isEnabled, isTrue);
       });
     });
   });

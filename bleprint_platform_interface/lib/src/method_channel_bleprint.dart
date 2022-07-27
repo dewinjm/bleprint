@@ -22,4 +22,14 @@ class MethodChannelBleprint extends BleprintPlatform {
   Future<void> scan({required int duration}) async {
     return methodChannel.invokeMethod('scan');
   }
+
+  @override
+  Future<bool> get isAvailable async => methodChannel
+      .invokeMethod<bool>('isAvailable')
+      .then((value) => value ?? false);
+
+  @override
+  Future<bool> get isEnabled async => methodChannel
+      .invokeMethod<bool>('isEnabled')
+      .then((value) => value ?? false);
 }

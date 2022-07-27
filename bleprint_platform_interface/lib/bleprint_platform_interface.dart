@@ -40,4 +40,10 @@ abstract class BleprintPlatform extends PlatformInterface {
   ///
   /// Timer in milliseconds to stop scanning [duration]
   Future<void> scan({required int duration});
+
+  /// Return true if Bluetooth Adapter is available
+  Future<bool> get isAvailable;
+
+  /// Return true if BluetoothAdapter.STATE_ON is true
+  Future<bool> get isEnabled;
 }

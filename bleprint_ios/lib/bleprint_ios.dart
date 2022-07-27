@@ -27,4 +27,14 @@ class BleprintIOS extends BleprintPlatform {
   Future<void> scan({required int duration}) {
     return methodChannel.invokeMethod('scan', duration);
   }
+
+  @override
+  Future<bool> get isAvailable async => methodChannel
+      .invokeMethod<bool>('isAvailable')
+      .then((value) => value ?? false);
+
+  @override
+  Future<bool> get isEnabled async => methodChannel
+      .invokeMethod<bool>('isEnabled')
+      .then((value) => value ?? false);
 }

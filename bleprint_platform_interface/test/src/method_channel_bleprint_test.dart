@@ -24,6 +24,10 @@ void main() {
               return kPlatformName;
             case 'scan':
               return Future.value();
+            case 'isAvailable':
+              return true;
+            case 'isEnabled':
+              return true;
             default:
               return null;
           }
@@ -48,6 +52,20 @@ void main() {
         log,
         <Matcher>[isMethodCall('scan', arguments: null)],
       );
+    });
+
+    test('isAvailable', () async {
+      final value = await methodChannelBleprint.isAvailable;
+
+      expect(log, <Matcher>[isMethodCall('isAvailable', arguments: null)]);
+      expect(value, isTrue);
+    });
+
+    test('isEnabled', () async {
+      final value = await methodChannelBleprint.isEnabled;
+
+      expect(log, <Matcher>[isMethodCall('isEnabled', arguments: null)]);
+      expect(value, isTrue);
     });
   });
 }
