@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,10 +11,14 @@ class BleprintMock extends BleprintPlatform {
 
   @override
   Future<String?> getPlatformName() async => mockPlatformName;
+
+  @override
+  Future<void> startScan({required int duration}) async {}
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
   group('BleprintPlatformInterface', () {
     late BleprintPlatform bleprintPlatform;
 
@@ -30,6 +32,15 @@ void main() {
         expect(
           await BleprintPlatform.instance.getPlatformName(),
           equals(BleprintMock.mockPlatformName),
+        );
+      });
+    });
+
+    group('startScan', () {
+      test('verify to startScan is called', () async {
+        expect(
+          BleprintPlatform.instance.startScan(duration: 1000),
+          completes,
         );
       });
     });

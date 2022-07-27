@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_android/bleprint_android.dart';
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
@@ -28,6 +26,8 @@ void main() {
         switch (methodCall.method) {
           case 'getPlatformName':
             return kPlatformName;
+          case 'startScan':
+            return Future.value();
           default:
             return null;
         }
@@ -46,6 +46,16 @@ void main() {
         <Matcher>[isMethodCall('getPlatformName', arguments: null)],
       );
       expect(name, equals(kPlatformName));
+    });
+
+    test('verify to startScan is called', () async {
+      const duration = 1000;
+      await bleprint.startScan(duration: duration);
+
+      expect(
+        log,
+        <Matcher>[isMethodCall('startScan', arguments: duration)],
+      );
     });
   });
 }

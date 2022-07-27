@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/src/method_channel_bleprint.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
@@ -37,4 +35,9 @@ abstract class BleprintPlatform extends PlatformInterface {
 
   /// Return the current platform name.
   Future<String?> getPlatformName();
+
+  /// Starts scan Bluetooth devices
+  ///
+  /// Timer in milliseconds to finish scanning [duration]
+  Future<void> startScan({required int duration});
 }

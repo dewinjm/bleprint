@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 import 'package:flutter/foundation.dart';
@@ -23,5 +21,10 @@ class BleprintAndroid extends BleprintPlatform {
   @override
   Future<String?> getPlatformName() {
     return methodChannel.invokeMethod<String>('getPlatformName');
+  }
+
+  @override
+  Future<void> startScan({required int duration}) {
+    return methodChannel.invokeMethod('startScan', duration);
   }
 }
