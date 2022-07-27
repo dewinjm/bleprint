@@ -24,7 +24,7 @@ class BleprintIOS extends BleprintPlatform {
   }
 
   @override
-  Future<void> startScan({required int duration}) {
-    return methodChannel.invokeMethod('startScan', duration);
+  Future<void> scan({required int duration}) {
+    return methodChannel.invokeMethod('scan', duration);
   }
 }

@@ -26,7 +26,7 @@ void main() {
         switch (methodCall.method) {
           case 'getPlatformName':
             return kPlatformName;
-          case 'startScan':
+          case 'scan':
             return Future.value();
           default:
             return null;
@@ -48,13 +48,13 @@ void main() {
       expect(name, equals(kPlatformName));
     });
 
-    test('verify to startScan is called', () async {
+    test('verify to scan is called', () async {
       const duration = 1000;
-      await bleprint.startScan(duration: duration);
+      await bleprint.scan(duration: duration);
 
       expect(
         log,
-        <Matcher>[isMethodCall('startScan', arguments: duration)],
+        <Matcher>[isMethodCall('scan', arguments: duration)],
       );
     });
   });

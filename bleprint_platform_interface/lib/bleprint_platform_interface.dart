@@ -38,6 +38,6 @@ abstract class BleprintPlatform extends PlatformInterface {
 
   /// Starts scan Bluetooth devices
   ///
-  /// Timer in milliseconds to finish scanning [duration]
-  Future<void> startScan({required int duration});
+  /// Timer in milliseconds to stop scanning [duration]
+  Future<void> scan({required int duration});
 }

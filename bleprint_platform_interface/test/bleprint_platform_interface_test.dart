@@ -13,7 +13,7 @@ class BleprintMock extends BleprintPlatform {
   Future<String?> getPlatformName() async => mockPlatformName;
 
   @override
-  Future<void> startScan({required int duration}) async {}
+  Future<void> scan({required int duration}) async {}
 }
 
 void main() {
@@ -36,10 +36,10 @@ void main() {
       });
     });
 
-    group('startScan', () {
-      test('verify to startScan is called', () async {
+    group('scan', () {
+      test('verify it is called', () async {
         expect(
-          BleprintPlatform.instance.startScan(duration: 1000),
+          BleprintPlatform.instance.scan(duration: 1000),
           completes,
         );
       });

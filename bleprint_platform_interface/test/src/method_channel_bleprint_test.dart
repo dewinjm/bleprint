@@ -22,7 +22,7 @@ void main() {
           switch (methodCall.method) {
             case 'getPlatformName':
               return kPlatformName;
-            case 'startScan':
+            case 'scan':
               return Future.value();
             default:
               return null;
@@ -41,12 +41,12 @@ void main() {
       expect(platformName, equals(kPlatformName));
     });
 
-    test('startScan', () async {
-      await methodChannelBleprint.startScan(duration: 1000);
+    test('scan', () async {
+      await methodChannelBleprint.scan(duration: 1000);
 
       expect(
         log,
-        <Matcher>[isMethodCall('startScan', arguments: null)],
+        <Matcher>[isMethodCall('scan', arguments: null)],
       );
     });
   });

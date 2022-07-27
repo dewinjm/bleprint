@@ -14,12 +14,12 @@ class MethodChannelBleprint extends BleprintPlatform {
   final methodChannel = const MethodChannel('bleprint');
 
   @override
-  Future<String?> getPlatformName() {
+  Future<String?> getPlatformName() async {
     return methodChannel.invokeMethod<String>('getPlatformName');
   }
 
   @override
-  Future<void> startScan({required int duration}) async {
-    await methodChannel.invokeMethod('startScan');
+  Future<void> scan({required int duration}) async {
+    return methodChannel.invokeMethod('scan');
   }
 }
