@@ -4,6 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import 'package:bleprint_platform_interface/src/method_channel_bleprint.dart';
+import 'package:flutter/services.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 /// The interface that implementations of bleprint must implement.
@@ -46,4 +47,7 @@ abstract class BleprintPlatform extends PlatformInterface {
 
   /// Return true if BluetoothAdapter.STATE_ON is true
   Future<bool> get isEnabled;
+
+  /// Listen all Methods Calls invoke into each platform
+  Stream<MethodCall> get methodStream;
 }

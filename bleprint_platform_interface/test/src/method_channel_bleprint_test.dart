@@ -19,6 +19,7 @@ void main() {
       methodChannelBleprint = MethodChannelBleprint()
         ..methodChannel.setMockMethodCallHandler((MethodCall methodCall) async {
           log.add(methodCall);
+
           switch (methodCall.method) {
             case 'getPlatformName':
               return kPlatformName;
@@ -28,6 +29,16 @@ void main() {
               return true;
             case 'isEnabled':
               return true;
+            case 'mockInvoke':
+              {
+                methodChannelBleprint.methodChannel.setMethodCallHandler(
+                  (MethodCall call) async {
+                    methodChannelBleprint.streamController.add(call);
+                    return Future(() => null);
+                  },
+                );
+                break;
+              }
             default:
               return null;
           }
@@ -66,6 +77,15 @@ void main() {
 
       expect(log, <Matcher>[isMethodCall('isEnabled', arguments: null)]);
       expect(value, isTrue);
+    });
+
+    test('methodStream', () async {
+      await methodChannelBleprint.methodChannel.invokeMethod('mockInvoke');
+
+      final value = methodChannelBleprint.methodStream;
+
+      expect(log, <Matcher>[isMethodCall('mockInvoke', arguments: null)]);
+      expect(value.isBroadcast, isTrue);
     });
   });
 }

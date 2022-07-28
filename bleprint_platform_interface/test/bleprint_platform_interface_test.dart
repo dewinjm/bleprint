@@ -3,11 +3,16 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+import 'dart:async';
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
+import 'package:flutter/src/services/message_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class BleprintMock extends BleprintPlatform {
   static const mockPlatformName = 'Mock';
+
+  final StreamController<MethodCall> _streamController =
+      StreamController.broadcast();
 
   @override
   Future<String?> getPlatformName() async => mockPlatformName;
@@ -20,6 +25,9 @@ class BleprintMock extends BleprintPlatform {
 
   @override
   Future<bool> get isEnabled async => true;
+
+  @override
+  Stream<MethodCall> get methodStream => _streamController.stream;
 }
 
 void main() {
@@ -60,6 +68,15 @@ void main() {
     group('isEnabled', () {
       test('should return true', () async {
         expect(await BleprintPlatform.instance.isEnabled, isTrue);
+      });
+    });
+
+    group('methodStream', () {
+      test('should return stream', () async {
+        expect(
+          BleprintPlatform.instance.methodStream,
+          isInstanceOf<Stream<MethodCall>>(),
+        );
       });
     });
   });
