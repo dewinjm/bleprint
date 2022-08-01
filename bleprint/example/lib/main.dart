@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Bleprint Example')),
+      appBar: AppBar(title: const Text('BLE Print Example')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
