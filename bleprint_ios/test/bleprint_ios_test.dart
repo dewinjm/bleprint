@@ -33,6 +33,9 @@ void main() {
             return true;
           case 'isEnabled':
             return true;
+          case 'mockInvoke':
+            await bleprint.addMethodCall(methodCall);
+            return null;
           default:
             return null;
         }
@@ -79,6 +82,14 @@ void main() {
         <Matcher>[isMethodCall('isEnabled', arguments: null)],
       );
       expect(value, isTrue);
+    });
+
+    test('should call invokeMethod', () async {
+      await bleprint.methodChannel.invokeMethod('mockInvoke');
+      expect(log, <Matcher>[isMethodCall('mockInvoke', arguments: null)]);
+
+      final value = bleprint.methodStream;
+      expect(value.isBroadcast, isTrue);
     });
   });
 }

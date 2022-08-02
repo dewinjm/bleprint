@@ -3,6 +3,8 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+import 'dart:async';
+
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
@@ -12,6 +14,11 @@ class MethodChannelBleprint extends BleprintPlatform {
   /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('bleprint');
+
+  /// Method to add new invoke
+  @visibleForTesting
+  final StreamController<MethodCall> streamController =
+      StreamController.broadcast();
 
   @override
   Future<String?> getPlatformName() async {
@@ -32,4 +39,7 @@ class MethodChannelBleprint extends BleprintPlatform {
   Future<bool> get isEnabled async => methodChannel
       .invokeMethod<bool>('isEnabled')
       .then((value) => value ?? false);
+
+  @override
+  Stream<MethodCall> get methodStream => streamController.stream;
 }
