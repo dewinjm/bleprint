@@ -3,7 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import 'package:bleprint/src/bluetooth/bluetooth_devices.dart';
+import 'package:bleprint/src/bluetooth/bluetooth_device.dart';
 
 /// The interface that implementations of BluetoothManager must implement.
 abstract class BluetoothManagerInterface {
