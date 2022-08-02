@@ -18,10 +18,10 @@ void main() {
     testWidgets('getPlatformName', (tester) async {
       app.main();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Get Platform Name'));
-      await tester.pumpAndSettle();
-      final expected = expectedPlatformName();
-      await tester.ensureVisible(find.text('Platform Name: $expected'));
+      expect(find.text('BLE Print Example'), findsOneWidget);
+      // await tester.pumpAndSettle();
+      // final expected = expectedPlatformName();
+      // await tester.ensureVisible(find.text('Platform Name: $expected'));
     });
   });
 }

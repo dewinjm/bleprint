@@ -28,6 +28,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String? _platformName;
+  late BluetoothManager bluetoothManager;
+
+  @override
+  void initState() {
+    super.initState();
+    bluetoothManager = BluetoothManager();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,17 +54,20 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                try {
-                  final result = await getPlatformName();
-                  setState(() => _platformName = result);
-                } catch (error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      content: Text('$error'),
-                    ),
-                  );
-                }
+                bluetoothManager.scanDevices().listen(
+                  (device) {
+                    setState(() => _platformName = device.name);
+                  },
+                  onError: (Object error, _) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        content: Text('$error'),
+                      ),
+                    );
+                  },
+                  cancelOnError: true,
+                );
               },
               child: const Text('Get Platform Name'),
             ),
