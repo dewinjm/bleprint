@@ -15,14 +15,18 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('E2E', () {
-    testWidgets('getPlatformName', (tester) async {
-      app.main();
-      await tester.pumpAndSettle();
-      //expect(find.text('BLE Print Example'), findsOneWidget);
-      //await tester.pumpAndSettle();
-      // final expected = expectedPlatformName();
-      await tester.ensureVisible(find.text('BLE Print Example'));
-    });
+    testWidgets(
+      'getPlatformName',
+      (tester) async {
+        app.main();
+        await tester.pumpAndSettle();
+        //expect(find.text('BLE Print Example'), findsOneWidget);
+        //await tester.pumpAndSettle();
+        // final expected = expectedPlatformName();
+        await tester.ensureVisible(find.text('BLE Print Example'));
+      },
+      timeout: Timeout.none,
+    );
   });
 }
 
