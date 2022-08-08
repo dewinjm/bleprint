@@ -19,8 +19,8 @@ class BluetoothDevice {
   BluetoothDevice.fromJson(Map<String, dynamic> json)
       : name = json['name'] as String,
         address = json['address'] as String,
-        type = json['type'] as int,
-        isConnected = json['isConnected'] as bool;
+        type = json['type'] as int?,
+        isConnected = json['isConnected'] as bool?;
 
   /// Convert BluetoothDevice model to map
   Map<String, dynamic> toJson() => {
@@ -37,8 +37,8 @@ class BluetoothDevice {
   final String address;
 
   /// Device Type
-  final int type;
+  final int? type;
 
   /// Device connect status
-  final bool isConnected;
+  final bool? isConnected;
 }
