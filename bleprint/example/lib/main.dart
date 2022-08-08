@@ -15,7 +15,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: HomePage());
+    return MaterialApp(
+      title: 'BLE Print Example',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const HomePage(),
+    );
   }
 }
 
@@ -27,8 +34,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _platformName;
   late BluetoothManager bluetoothManager;
+  bool _isScanning = false;
+  List<BluetoothDevice> _devices = <BluetoothDevice>[];
 
   @override
   void initState() {
@@ -40,40 +48,108 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('BLE Print Example')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_platformName == null)
-              const SizedBox.shrink()
-            else
-              Text(
-                'Platform Name: $_platformName',
-                style: Theme.of(context).textTheme.headline5,
-              ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                bluetoothManager.scanDevices().listen(
-                  (device) {
-                    setState(() => _platformName = device.name);
-                  },
-                  onError: (Object error, _) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        content: Text('$error'),
-                      ),
-                    );
-                  },
-                  cancelOnError: true,
-                );
-              },
-              child: const Text('Get Platform Name'),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _scanWidget(),
+                Column(
+                  children: _devices.map(_buildItem).toList(),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _scanWidget() {
+    return _isScanning
+        ? Column(
+            children: const [
+              Text('Wait bluetooth scan'),
+              SizedBox(height: 8),
+              CircularProgressIndicator(),
+            ],
+          )
+        : Column(
+            children: [
+              const Text('Please press scan button to start scanning'),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _scanDevices,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    children: const [
+                      Text('Scan'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+  }
+
+  Widget _buildItem(BluetoothDevice device) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: 600,
+      ),
+      child: Card(
+        elevation: 3,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.bluetooth),
+                  const SizedBox(width: 8),
+                  Text(device.name),
+                ],
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton(onPressed: () {}, child: const Text('Connect')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _scanDevices() {
+    setState(() {
+      _isScanning = true;
+      _devices = <BluetoothDevice>[];
+    });
+
+    bluetoothManager.scanDevices(duration: const Duration(seconds: 4)).listen(
+      (device) {
+        setState(() {
+          if (device != null) {
+            _devices.add(device);
+          } else {
+            _isScanning = false;
+          }
+        });
+      },
+    ).onError((Object error, _) {
+      setState(() {
+        _isScanning = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Theme.of(context).primaryColor,
+          content: Text('$error'),
+        ),
+      );
+    });
   }
 }
