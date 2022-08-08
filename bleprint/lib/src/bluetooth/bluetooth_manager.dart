@@ -20,15 +20,14 @@ class BluetoothManager implements BluetoothManagerInterface {
   Future<bool> get isEnabled async => _platform.isEnabled;
 
   @override
-  Stream<BluetoothDevice> scanDevices({Duration? duration}) async* {
-    duration ??= const Duration(seconds: 5);
-
-    final streamController = StreamController<BluetoothDevice>.broadcast();
+  Stream<BluetoothDevice?> scanDevices({required Duration duration}) async* {
+    final streamController = StreamController<BluetoothDevice?>.broadcast();
     final devices = <BluetoothDevice>[];
 
     _listenScan(duration: duration).handleError(
       (Object error, StackTrace stackTrace) {
         streamController.sink.addError(error, stackTrace);
+        streamController.close();
       },
     ).listen(
       (device) async {
@@ -47,6 +46,9 @@ class BluetoothManager implements BluetoothManagerInterface {
             devices.add(device);
             streamController.sink.add(device);
           }
+        } else {
+          streamController.sink.add(null);
+          await streamController.close();
         }
       },
     );
