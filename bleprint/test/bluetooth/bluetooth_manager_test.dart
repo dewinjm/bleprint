@@ -96,8 +96,34 @@ void main() {
         bluetoothManager.scanDevices(duration: duration).listen(
           expectAsync1(
             (device) {
-              expect(device.name, equals(fakeDevice.name));
+              expect(device!.name, equals(fakeDevice.name));
               expect(device.address, equals(fakeDevice.address));
+            },
+          ),
+        );
+      });
+
+      test('should return onStopScan method stream', () async {
+        const duration = Duration(milliseconds: 1000);
+        when(
+          () => bleprintPlatform.scan(duration: duration.inMilliseconds),
+        ).thenAnswer((_) async => Future.value());
+
+        final fakeDevice = BluetoothDevice(
+          name: 'deviceABC',
+          address: 'address',
+        );
+
+        when(
+          () => bleprintPlatform.methodStream,
+        ).thenAnswer((_) {
+          return Stream.value(MethodCall('onStopScan', fakeDevice.toJson()));
+        });
+
+        bluetoothManager.scanDevices(duration: duration).listen(
+          expectAsync1(
+            (device) {
+              expect(device, isNull);
             },
           ),
         );

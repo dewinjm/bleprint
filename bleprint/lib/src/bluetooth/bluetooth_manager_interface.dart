@@ -16,5 +16,5 @@ abstract class BluetoothManagerInterface {
   /// Starts scan Bluetooth devices
   ///
   /// `Duration` to stop scanning [duration]
-  Stream<BluetoothDevice> scanDevices({Duration? duration});
+  Stream<BluetoothDevice?> scanDevices({required Duration duration});
 }

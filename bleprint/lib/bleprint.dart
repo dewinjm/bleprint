@@ -5,5 +5,5 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-export 'src/bluetooth/bluetooth_manager.dart';
+export 'src/bluetooth/bluetooth.dart';
 export 'src/platform_name.dart';

@@ -7,8 +7,8 @@
 class BluetoothDevice {
   /// BluetoothDevice constructor
   BluetoothDevice({
-    this.name,
-    this.address,
+    required this.name,
+    required this.address,
     this.type = 0,
     this.isConnected = false,
   });
@@ -17,8 +17,8 @@ class BluetoothDevice {
   ///
   /// Json HashMap [json]
   BluetoothDevice.fromJson(Map<String, dynamic> json)
-      : name = json['name'] as String?,
-        address = json['address'] as String?,
+      : name = json['name'] as String,
+        address = json['address'] as String,
         type = json['type'] as int?,
         isConnected = json['isConnected'] as bool?;
 
@@ -31,10 +31,10 @@ class BluetoothDevice {
       };
 
   /// Device name
-  final String? name;
+  final String name;
 
   /// Device MAC address
-  final String? address;
+  final String address;
 
   /// Device Type
   final int? type;
