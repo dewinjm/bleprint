@@ -54,4 +54,12 @@ class BleprintAndroid extends BleprintPlatform {
         .setMethodCallHandler((MethodCall call) async => addMethodCall(call));
     return _streamController.stream;
   }
+
+  @override
+  Future<List<Map<String, dynamic>?>> bondedDevices() async {
+    final objects = await methodChannel.invokeMethod<List<dynamic>>('paired');
+    return objects != null
+        ? objects.map((e) => Map<String, dynamic>.from(e as Map)).toList()
+        : [];
+  }
 }

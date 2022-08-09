@@ -32,10 +32,12 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     PluginRegistry.RequestPermissionsResultListener, PluginRegistry.ActivityResultListener {
     companion object {
         const val DEFAULT_SCAN_PERIOD: Long = 2000
-        const val SCAN_REQUEST_PERMISSION_LOCATION = 2021
-        const val SCAN_REQUEST_PERMISSION_ENABLE = 2022
-        const val CONNECT_REQUEST_PERMISSION_LOCATION = 2025
-        const val CONNECT_REQUEST_PERMISSION_ENABLE = 2025
+        const val SCAN_REQUEST_PERMISSION = 2021
+        const val SCAN_REQUEST_BLUETOOTH_ENABLE = 2022
+        const val CONNECT_REQUEST_PERMISSION = 2023
+        const val CONNECT_REQUEST_BLUETOOTH_ENABLE = 2024
+        const val PAIR_REQUEST_PERMISSION = 2025
+        const val PAIR_REQUEST_BLUETOOTH_ENABLE = 2025
     }
 
     private lateinit var activity: Activity
@@ -97,6 +99,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 scanPeriod = (call.arguments as Int).toLong()
                 startScan()
             }
+            "paired" -> getBondedDevices()
             else -> result.notImplemented()
         }
     }
@@ -108,10 +111,9 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     ): Boolean {
         val isGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED
         when (requestCode) {
-            SCAN_REQUEST_PERMISSION_LOCATION -> {
-                if (isGranted) startScan() else errorPermission()
-            }
-            CONNECT_REQUEST_PERMISSION_LOCATION -> {}
+            SCAN_REQUEST_PERMISSION -> if (isGranted) startScan() else errorPermission()
+            PAIR_REQUEST_PERMISSION -> if (isGranted) getBondedDevices() else errorPermission()
+            CONNECT_REQUEST_PERMISSION -> {}
         }
         return false
     }
@@ -119,8 +121,9 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         val isResultOk = resultCode == Activity.RESULT_OK
         when (requestCode) {
-            SCAN_REQUEST_PERMISSION_ENABLE -> if (isResultOk) startScan() else errorBluetoothEnable()
-            CONNECT_REQUEST_PERMISSION_ENABLE -> {}
+            SCAN_REQUEST_BLUETOOTH_ENABLE -> if (isResultOk) startScan() else errorBluetoothEnable()
+            PAIR_REQUEST_BLUETOOTH_ENABLE -> if (isResultOk) getBondedDevices() else errorBluetoothEnable()
+            CONNECT_REQUEST_BLUETOOTH_ENABLE -> {}
         }
         return false
     }
@@ -188,9 +191,9 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
 
     private fun startScan() {
-        if (!isPermissionGranted(SCAN_REQUEST_PERMISSION_LOCATION))
+        if (!isPermissionGranted(SCAN_REQUEST_PERMISSION))
             return
-        if (!isBluetoothEnable(SCAN_REQUEST_PERMISSION_ENABLE))
+        if (!isBluetoothEnable(SCAN_REQUEST_BLUETOOTH_ENABLE))
             return
         if (!isLeScannerAvailable())
             return
@@ -255,5 +258,20 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         override fun onScanFailed(errorCode: Int) {
             Logger.error("onScanFailed: error code: $errorCode", null)
         }
+    }
+
+    private fun getBondedDevices() {
+        if (!isPermissionGranted(PAIR_REQUEST_PERMISSION))
+            return
+        if (!isBluetoothEnable(PAIR_REQUEST_BLUETOOTH_ENABLE))
+            return
+
+        val devices: MutableList<MutableMap<String, Any>?> = ArrayList()
+        for (device in bluetoothAdapter!!.bondedDevices) {
+            val map = Device.toJson(device)
+            devices.add(map)
+        }
+
+        methodResult.success(devices)
     }
 }
