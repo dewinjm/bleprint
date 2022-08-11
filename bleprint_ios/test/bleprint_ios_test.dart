@@ -13,8 +13,24 @@ void main() {
 
   group('BleprintIOS', () {
     const kPlatformName = 'iOS';
+    const mockDevicesJson = [
+      {
+        'name': 'device #1',
+        'address': 'address #1',
+        'type': 0,
+        'isConnected': false
+      },
+      {
+        'name': 'device #2',
+        'address': 'address #2',
+        'type': 2,
+        'isConnected': false
+      },
+    ];
+
     late BleprintIOS bleprint;
     late List<MethodCall> log;
+    var isPairedNull = false;
 
     setUp(() async {
       bleprint = BleprintIOS();
@@ -33,6 +49,8 @@ void main() {
             return true;
           case 'isEnabled':
             return true;
+          case 'paired':
+            return isPairedNull ? null : mockDevicesJson;
           case 'mockInvoke':
             await bleprint.addMethodCall(methodCall);
             return null;
@@ -40,6 +58,11 @@ void main() {
             return null;
         }
       });
+    });
+
+    tearDown(() {
+      log.clear();
+      isPairedNull = false;
     });
 
     test('can be registered', () {
@@ -90,6 +113,23 @@ void main() {
 
       final value = bleprint.methodStream;
       expect(value.isBroadcast, isTrue);
+    });
+
+    group('bondedDevices', () {
+      test('should return list map', () async {
+        final result = await bleprint.bondedDevices();
+
+        expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
+        expect(result, equals(mockDevicesJson));
+      });
+
+      test('should return empty list map when is null', () async {
+        isPairedNull = true;
+        final result = await bleprint.bondedDevices();
+
+        expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
+        expect(result, equals([]));
+      });
     });
   });
 }

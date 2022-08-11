@@ -11,9 +11,25 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const kPlatformName = 'platformName';
 
+  const mockDevicesJson = [
+    {
+      'name': 'device #1',
+      'address': 'address #1',
+      'type': 0,
+      'isConnected': false
+    },
+    {
+      'name': 'device #2',
+      'address': 'address #2',
+      'type': 2,
+      'isConnected': false
+    },
+  ];
+
   group('$MethodChannelBleprint', () {
     late MethodChannelBleprint methodChannelBleprint;
     final log = <MethodCall>[];
+    var isPairedNull = false;
 
     setUp(() async {
       methodChannelBleprint = MethodChannelBleprint()
@@ -29,6 +45,8 @@ void main() {
               return true;
             case 'isEnabled':
               return true;
+            case 'paired':
+              return isPairedNull ? null : mockDevicesJson;
             case 'mockInvoke':
               {
                 methodChannelBleprint.methodChannel.setMethodCallHandler(
@@ -45,7 +63,10 @@ void main() {
         });
     });
 
-    tearDown(log.clear);
+    tearDown(() {
+      log.clear();
+      isPairedNull = false;
+    });
 
     test('getPlatformName', () async {
       final platformName = await methodChannelBleprint.getPlatformName();
@@ -86,6 +107,23 @@ void main() {
 
       expect(log, <Matcher>[isMethodCall('mockInvoke', arguments: null)]);
       expect(value.isBroadcast, isTrue);
+    });
+
+    group('bondedDevices', () {
+      test('should return list map', () async {
+        final result = await methodChannelBleprint.bondedDevices();
+
+        expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
+        expect(result, equals(mockDevicesJson));
+      });
+
+      test('should return empty list map when is null', () async {
+        isPairedNull = true;
+        final result = await methodChannelBleprint.bondedDevices();
+
+        expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
+        expect(result, equals([]));
+      });
     });
   });
 }

@@ -150,5 +150,32 @@ void main() {
         await expectLater(stream, emitsInOrder([]));
       });
     });
+
+    group('bondedDevices', () {
+      test('should return a list of BluetoothDevice', () async {
+        when(
+          () => bleprintPlatform.bondedDevices(),
+        ).thenAnswer(
+          (_) async => [
+            {
+              'name': 'device #1',
+              'address': 'address #1',
+              'type': 0,
+              'isConnected': false
+            },
+            {
+              'name': 'device #2',
+              'address': 'address #2',
+              'type': 2,
+              'isConnected': false
+            },
+          ],
+        );
+
+        final result = await bluetoothManager.bondedDevices();
+        expect(result, isList);
+        expect(result.length, equals(2));
+      });
+    });
   });
 }

@@ -1,9 +1,7 @@
-// Copyright (c) 2022, Very Good Ventures
-// https://verygood.ventures
+// Copyright (c) 2022 Dewin J. Martinez
 //
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file or at
-// https://opensource.org/licenses/MIT.
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
 
 import 'package:bleprint/bleprint.dart';
 import 'package:flutter/material.dart';
@@ -42,6 +40,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     bluetoothManager = BluetoothManager();
+    _getBondedDevices();
   }
 
   @override
@@ -144,12 +143,34 @@ class _HomePageState extends State<HomePage> {
         _isScanning = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Theme.of(context).primaryColor,
-          content: Text('$error'),
-        ),
-      );
+      _showError(error);
     });
+  }
+
+  Future<void> _getBondedDevices() async {
+    setState(() {
+      _isScanning = true;
+      _devices = <BluetoothDevice>[];
+    });
+
+    try {
+      final result = await bluetoothManager.bondedDevices();
+      _devices.addAll(result);
+    } catch (ex) {
+      _showError(ex);
+    }
+
+    setState(() {
+      _isScanning = false;
+    });
+  }
+
+  void _showError(Object error) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Theme.of(context).primaryColor,
+        content: Text('$error'),
+      ),
+    );
   }
 }

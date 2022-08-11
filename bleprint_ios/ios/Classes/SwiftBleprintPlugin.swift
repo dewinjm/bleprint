@@ -1,4 +1,4 @@
-// Copyright (c) 2022 dewin
+// Copyright (c) 2022 Dewin J. Martinez
 // 
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
@@ -41,6 +41,8 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
         case "scan":
             let value = call.arguments as? NSNumber
             startScan(timer: value)
+        case "paired":
+            bondedDevices();
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -63,39 +65,40 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
     
     public func centralManagerDidUpdateState(_ central: CBCentralManager){
         self.centralState = central.state
-        
-        switch(central.state) {
+    }
+    
+    private func hasStateError() ->FlutterError?{
+        switch(self.centralState) {
         case .poweredOff:
-            let error = FlutterError.init(code: "bluetooth_poweredOff", message: "Bluetooth is currently powered off", details: central.state)
-            print(error.code)
+            return FlutterError.init(code: "bluetooth_disabled", message: "is required Bluetooth enable", details: "\(centralState!)")
             
         case .poweredOn:
             print("poweredOn")
+            return nil
             
         case .resetting:
             print("resetting")
+            return nil
             
         case .unauthorized:
-            let error = FlutterError.init(code: "bluetooth_unauthorized", message: "The app is not authorized to use Bluetooth Low Energy", details: central.state)
-            print(error.code)
-                        
+            return FlutterError.init(code: "bluetooth_unauthorized", message: "The app is not authorized to use Bluetooth", details: "\(centralState!)")
+            
         case .unknown:
-            let error = FlutterError.init(code: "bluetooth_unknown", message: "unknown", details: central.state)
-            print(error.code)
-                       
+            return FlutterError.init(code: "bluetooth_unknown", message: "unknown", details: "\(centralState!)")
+            
         case .unsupported:
-            let error = FlutterError.init(code: "bluetooth_unsupported", message: "The platform/hardware doesn't support Bluetooth Low Energy", details: central.state)
-            print(error.code)
-                        
+            return FlutterError.init(code: "bluetooth_unavailable", message: "Bluetooth is unavailable", details: "\(centralState!)")
+            
+            
         default:
-            print("default")
-            break
+            return nil
         }
     }
     
     private func startScan(timer:NSNumber?) {
-        if(centralState != .poweredOn){
-            let error = FlutterError(code: "scan_error", message: "can only accept this command while in the powered on state", details: "\(centralState!)")
+        let error = hasStateError()
+        
+        if error != nil {
             result(error)
             return
         }
@@ -119,5 +122,9 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
     private func stopScan(){
         self.manager.stopScan()
         self.channel.invokeMethod("onStopScan", arguments: false)
+    }
+    
+    private func bondedDevices(){
+        self.result?([])
     }
 }

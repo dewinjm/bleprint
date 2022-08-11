@@ -50,4 +50,8 @@ abstract class BleprintPlatform extends PlatformInterface {
 
   /// Listen all Methods Calls invoke into each platform
   Stream<MethodCall> get methodStream;
+
+  /// Return the set of BluetoothDevice objects that are bonded (paired)
+  /// to the local adapter.
+  Future<List<Map<String, dynamic>?>> bondedDevices();
 }
