@@ -75,4 +75,11 @@ class BluetoothManager implements BluetoothManagerInterface {
       return null;
     });
   }
+
+  @override
+  Future<List<BluetoothDevice>> bondedDevices() async {
+    return (await _platform.bondedDevices())
+        .map((map) => BluetoothDevice.fromJson(Map<String, dynamic>.from(map!)))
+        .toList();
+  }
 }
