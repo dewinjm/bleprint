@@ -47,6 +47,10 @@ void main() {
               return true;
             case 'paired':
               return isPairedNull ? null : mockDevicesJson;
+            case 'connect':
+              return true;
+            case 'disconnect':
+              return false;
             case 'mockInvoke':
               {
                 methodChannelBleprint.methodChannel.setMethodCallHandler(
@@ -124,6 +128,29 @@ void main() {
         expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
         expect(result, equals([]));
       });
+    });
+
+    test('connect', () async {
+      final value = await methodChannelBleprint.connect(
+        deviceAddress: 'deviceAddress',
+        duration: 1000,
+      );
+
+      expect(log, <Matcher>[
+        isMethodCall('connect', arguments: ['deviceAddress', 1000]),
+      ]);
+      expect(value, isTrue);
+    });
+
+    test('disconnect', () async {
+      final value = await methodChannelBleprint.disconnect(
+        deviceAddress: 'deviceAddress',
+      );
+
+      expect(log, <Matcher>[
+        isMethodCall('disconnect', arguments: 'deviceAddress'),
+      ]);
+      expect(value, isFalse);
     });
   });
 }

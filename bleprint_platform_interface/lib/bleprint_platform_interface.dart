@@ -54,4 +54,12 @@ abstract class BleprintPlatform extends PlatformInterface {
   /// Return the set of BluetoothDevice objects that are bonded (paired)
   /// to the local adapter.
   Future<List<Map<String, dynamic>?>> bondedDevices();
+
+  /// Connect bluetooth devices
+  /// return true when connection is successful
+  Future<bool> connect({required String deviceAddress, required int duration});
+
+  /// Disconnect bluetooth devices
+  /// return false when disconnection is successful
+  Future<bool> disconnect({required String deviceAddress});
 }

@@ -50,4 +50,19 @@ class MethodChannelBleprint extends BleprintPlatform {
         ? objects.map((e) => Map<String, dynamic>.from(e as Map)).toList()
         : [];
   }
+
+  @override
+  Future<bool> connect({required String deviceAddress, required int duration}) {
+    return methodChannel.invokeMethod<bool>(
+      'connect',
+      [deviceAddress, duration],
+    ).then((value) => value ?? false);
+  }
+
+  @override
+  Future<bool> disconnect({required String deviceAddress}) async {
+    return methodChannel
+        .invokeMethod<bool>('disconnect', deviceAddress)
+        .then((value) => value ?? false);
+  }
 }
