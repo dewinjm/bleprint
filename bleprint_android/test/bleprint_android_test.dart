@@ -51,6 +51,10 @@ void main() {
             return true;
           case 'paired':
             return isPairedNull ? null : mockDevicesJson;
+          case 'connect':
+            return true;
+          case 'disconnect':
+            return false;
           case 'mockInvoke':
             await bleprint.addMethodCall(methodCall);
             return null;
@@ -130,6 +134,28 @@ void main() {
         expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
         expect(result, equals([]));
       });
+    });
+
+    test('connect should return true when connection is successful', () async {
+      final value = await bleprint.connect(
+        deviceAddress: 'deviceAddress',
+        duration: 1000,
+      );
+
+      expect(log, <Matcher>[
+        isMethodCall('connect', arguments: ['deviceAddress', 1000]),
+      ]);
+      expect(value, isTrue);
+    });
+
+    test('should return false when disconnection is successful', () async {
+      final value = await bleprint.disconnect(deviceAddress: 'deviceAddress');
+
+      expect(
+        log,
+        <Matcher>[isMethodCall('disconnect', arguments: 'deviceAddress')],
+      );
+      expect(value, isFalse);
     });
   });
 }
