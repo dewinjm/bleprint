@@ -1,4 +1,5 @@
 package com.dewinjm.bleprint
 
-class BluetoothDeviceCache {
-}
+import android.bluetooth.BluetoothGatt
+
+data class BluetoothDeviceCache(val gatt: BluetoothGatt?)
