@@ -326,7 +326,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         // If device was connected to previously but is now disconnected, attempt a reconnect
         if (mDevices.containsKey(deviceId) && !isConnected) {
             if (!mDevices[deviceId]!!.gatt!!.connect()) {
-                methodResult.sendError("reconnect_error", "error when reconnecting to device", null)
+                methodResult.sendError("reconnect_error", "error when reconnecting to device")
                 return
             }
         }
