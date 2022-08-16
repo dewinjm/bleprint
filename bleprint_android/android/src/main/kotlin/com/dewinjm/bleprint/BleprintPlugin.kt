@@ -305,6 +305,11 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
 
     private fun connect(arguments: Any) {
+        if (!isPermissionGranted(PAIR_REQUEST_PERMISSION))
+            return
+        if (!isBluetoothEnable(PAIR_REQUEST_BLUETOOTH_ENABLE))
+            return
+
         val arg = arguments as ArrayList<*>
         val address = arg[0] as String?
         val timeOut = (arg[1] as Int).toLong()
@@ -354,6 +359,11 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
 
     private fun disconnect(arguments: Any) {
+        if (!isPermissionGranted(PAIR_REQUEST_PERMISSION))
+            return
+        if (!isBluetoothEnable(PAIR_REQUEST_BLUETOOTH_ENABLE))
+            return
+
         val address = arguments as String?
         val device = getPeripheral(address) ?: return
         if (isScanning)

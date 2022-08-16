@@ -49,9 +49,11 @@ class BluetoothManager implements BluetoothManagerInterface {
             _devices[newIndex] = device;
           } else {
             _devices.add(device);
+            streamController.sink.add(_devices);
           }
+        } else {
+          streamController.sink.add(_devices);
         }
-        streamController.sink.add(_devices);
       },
     );
 
