@@ -136,7 +136,7 @@ void main() {
       });
     });
 
-    test('connect should return true when connection is successful', () async {
+    test('connect should return true when connection is successfull', () async {
       final value = await bleprint.connect(
         deviceAddress: 'deviceAddress',
         duration: 1000,
@@ -148,7 +148,7 @@ void main() {
       expect(value, isTrue);
     });
 
-    test('should return false when disconnection is successful', () async {
+    test('should return false when disconnection is successfull', () async {
       final value = await bleprint.disconnect(deviceAddress: 'deviceAddress');
 
       expect(

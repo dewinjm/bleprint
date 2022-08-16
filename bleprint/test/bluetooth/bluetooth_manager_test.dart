@@ -95,9 +95,9 @@ void main() {
 
         bluetoothManager.scanDevices(duration: duration).listen(
           expectAsync1(
-            (device) {
-              expect(device!.name, equals(fakeDevice.name));
-              expect(device.address, equals(fakeDevice.address));
+            (devices) {
+              expect(devices.length, equals(1));
+              expect(devices.first.name, equals(fakeDevice.name));
             },
           ),
         );
@@ -123,7 +123,7 @@ void main() {
         bluetoothManager.scanDevices(duration: duration).listen(
           expectAsync1(
             (device) {
-              expect(device, isNull);
+              expect(device, List<BluetoothDevice>.empty());
             },
           ),
         );
@@ -176,6 +176,55 @@ void main() {
         expect(result, isList);
         expect(result.length, equals(2));
       });
+    });
+
+    group('connect', () {
+      test('should return true when connection is successfull', () async {
+        const devicesAddress = 'mockAddress';
+        const timeout = 2000;
+
+        final device = BluetoothDevice(
+          name: 'Device abc',
+          address: devicesAddress,
+        );
+
+        when(
+          () => bleprintPlatform.connect(
+            deviceAddress: devicesAddress,
+            duration: timeout,
+          ),
+        ).thenAnswer((_) async => true);
+
+        final result = await bluetoothManager.connect(
+          device: device,
+          duration: const Duration(milliseconds: timeout),
+        );
+        expect(result, isTrue);
+      });
+    });
+
+    group('disconnect', () {
+      test(
+        'should return false when disconnection is successfull',
+        () async {
+          const devicesAddress = 'mockAddress';
+          final device = BluetoothDevice(
+            name: 'Device abc',
+            address: devicesAddress,
+          );
+
+          when(
+            () => bleprintPlatform.disconnect(
+              deviceAddress: devicesAddress,
+            ),
+          ).thenAnswer((_) async => false);
+
+          final result = await bluetoothManager.disconnect(
+            device: device,
+          );
+          expect(result, isFalse);
+        },
+      );
     });
   });
 }

@@ -46,5 +46,21 @@ void main() {
         expect(result, expectedMap);
       });
     });
+
+    group('copyWith', () {
+      test('should create a copy of BluetoothDevice', () {
+        expect(deviceMock, equals(deviceMock.copyWith()));
+
+        final device = deviceMock.copyWith(
+          name: 'ABC',
+          address: 'new address',
+          type: 1,
+          isConnected: false,
+        );
+
+        expect(device.name, equals('ABC'));
+        expect(device.address, equals('new address'));
+      });
+    });
   });
 }
