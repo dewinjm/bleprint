@@ -41,4 +41,19 @@ class BluetoothDevice {
 
   /// Device connect status
   final bool? isConnected;
+
+  /// Creates a copy of BluetoothDevice but with the given fields
+  /// replaced with the new values.
+  BluetoothDevice copyWith({
+    String? name,
+    String? address,
+    int? type,
+    bool? isConnected,
+  }) =>
+      BluetoothDevice(
+        name: name ?? this.name,
+        address: address ?? this.address,
+        type: type ?? this.type,
+        isConnected: isConnected ?? this.isConnected,
+      );
 }

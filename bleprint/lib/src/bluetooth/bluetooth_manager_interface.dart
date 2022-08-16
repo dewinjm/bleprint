@@ -16,9 +16,20 @@ abstract class BluetoothManagerInterface {
   /// Starts scan Bluetooth devices
   ///
   /// `Duration` to stop scanning [duration]
-  Stream<BluetoothDevice?> scanDevices({required Duration duration});
+  Stream<List<BluetoothDevice>> scanDevices({
+    required Duration duration,
+  });
 
   /// Return the set of BluetoothDevice objects that are bonded (paired)
   /// to the local adapter.
   Future<List<BluetoothDevice>> bondedDevices();
+
+  /// Connect Bluetooth device
+  Future<bool> connect({
+    required BluetoothDevice device,
+    Duration? duration,
+  });
+
+  /// Disconnect Bluetooth device
+  Future<bool> disconnect({required BluetoothDevice device});
 }

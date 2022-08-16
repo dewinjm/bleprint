@@ -114,11 +114,23 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
               const SizedBox(width: 16),
-              ElevatedButton(onPressed: () {}, child: const Text('Connect')),
+              _connectButton(device),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _connectButton(BluetoothDevice device) {
+    final isConnected = device.isConnected ?? false;
+
+    return ElevatedButton(
+      onPressed: () => isConnected ? _disconnect(device) : _connect(device),
+      style: ElevatedButton.styleFrom(
+        primary: isConnected ? Colors.red : Colors.blue,
+      ),
+      child: Text(isConnected ? 'Disconnect' : 'Connect'),
     );
   }
 
@@ -129,13 +141,10 @@ class _HomePageState extends State<HomePage> {
     });
 
     bluetoothManager.scanDevices(duration: const Duration(seconds: 4)).listen(
-      (device) {
+      (devices) {
         setState(() {
-          if (device != null) {
-            _devices.add(device);
-          } else {
-            _isScanning = false;
-          }
+          _devices = devices;
+          _isScanning = false;
         });
       },
     ).onError((Object error, _) {
@@ -156,6 +165,51 @@ class _HomePageState extends State<HomePage> {
     try {
       final result = await bluetoothManager.bondedDevices();
       _devices.addAll(result);
+    } catch (ex) {
+      _showError(ex);
+    }
+
+    setState(() {
+      _isScanning = false;
+    });
+  }
+
+  Future<void> _connect(BluetoothDevice device) async {
+    setState(() {
+      _isScanning = true;
+    });
+
+    try {
+      final result = await bluetoothManager.connect(
+        device: device,
+        duration: const Duration(seconds: 5),
+      );
+
+      setState(() {
+        final index = _devices.indexWhere((e) => e.address == device.address);
+        _devices[index] = device.copyWith(isConnected: result);
+      });
+    } catch (ex) {
+      _showError(ex);
+    }
+
+    setState(() {
+      _isScanning = false;
+    });
+  }
+
+  Future<void> _disconnect(BluetoothDevice device) async {
+    setState(() {
+      _isScanning = true;
+    });
+
+    try {
+      final result = await bluetoothManager.disconnect(device: device);
+
+      setState(() {
+        final index = _devices.indexWhere((e) => e.address == device.address);
+        _devices[index] = device.copyWith(isConnected: result);
+      });
     } catch (ex) {
       _showError(ex);
     }

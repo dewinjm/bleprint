@@ -11,6 +11,9 @@ import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 
 /// Bluetooth manager helpers
 class BluetoothManager implements BluetoothManagerInterface {
+  final _periodDefault = 2000;
+  final _devices = <BluetoothDevice>[];
+
   BleprintPlatform get _platform => BleprintPlatform.instance;
 
   @override
@@ -20,9 +23,11 @@ class BluetoothManager implements BluetoothManagerInterface {
   Future<bool> get isEnabled async => _platform.isEnabled;
 
   @override
-  Stream<BluetoothDevice?> scanDevices({required Duration duration}) async* {
-    final streamController = StreamController<BluetoothDevice?>.broadcast();
-    final devices = <BluetoothDevice>[];
+  Stream<List<BluetoothDevice>> scanDevices({
+    required Duration duration,
+  }) async* {
+    final streamController =
+        StreamController<List<BluetoothDevice>>.broadcast();
 
     _listenScan(duration: duration).handleError(
       (Object error, StackTrace stackTrace) {
@@ -34,22 +39,19 @@ class BluetoothManager implements BluetoothManagerInterface {
         if (device != null) {
           var newIndex = -1;
 
-          devices.asMap().forEach((index, e) {
+          _devices.asMap().forEach((index, e) {
             if (e.address == device.address) {
               newIndex = index;
             }
           });
 
           if (newIndex != -1) {
-            devices[newIndex] = device;
+            _devices[newIndex] = device;
           } else {
-            devices.add(device);
-            streamController.sink.add(device);
+            _devices.add(device);
           }
-        } else {
-          streamController.sink.add(null);
-          await streamController.close();
         }
+        streamController.sink.add(_devices);
       },
     );
 
@@ -81,5 +83,25 @@ class BluetoothManager implements BluetoothManagerInterface {
     return (await _platform.bondedDevices())
         .map((map) => BluetoothDevice.fromJson(Map<String, dynamic>.from(map!)))
         .toList();
+  }
+
+  @override
+  Future<bool> connect({
+    required BluetoothDevice device,
+    Duration? duration,
+  }) async {
+    return _platform.connect(
+      deviceAddress: device.address,
+      duration: duration == null ? _periodDefault : duration.inMilliseconds,
+    );
+  }
+
+  @override
+  Future<bool> disconnect({
+    required BluetoothDevice device,
+  }) async {
+    return _platform.disconnect(
+      deviceAddress: device.address,
+    );
   }
 }
