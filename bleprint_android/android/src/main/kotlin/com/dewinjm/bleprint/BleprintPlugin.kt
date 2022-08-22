@@ -208,9 +208,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             return
         if (!isLeScannerAvailable())
             return
-
-        //mDevices.forEach { (key, cache) -> cache. cache.gatt!!.disconnect() }
-        //methodResult.success(null)
+ 
         if (isScanning) {
             stopScan()
             scanLeDevice()
@@ -327,8 +325,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             methodResult.sendError("already_connected", "connection with device already exists")
             return
         }
-
-        // If device was connected to previously but is now disconnected, attempt a reconnect
+ 
         if (mDevices.containsKey(deviceId) && !isConnected) {
             if (!mDevices[deviceId]!!.gatt!!.connect()) {
                 methodResult.sendError("reconnect_error", "error when reconnecting to device")
@@ -356,6 +353,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }, timeOut)
 
         mDevices[device.address] = BluetoothDeviceCache(gattServer)
+        methodResult.success(null)
     }
 
     private fun disconnect(arguments: Any) {
@@ -380,18 +378,21 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 gattServer.close()
             }
         }
+        methodResult.success(null)
     }
 
     private val gattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+            Logger.log("[onConnectionStateChange] newState: $newState")
+
             if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 if (!mDevices.containsKey(gatt!!.device.address)) {
                     gatt.close()
                 }
             }
-            val state = newState == BluetoothProfile.STATE_CONNECTED
-            Logger.log(state.toString())
-            methodResult.success(state)
+
+            val device = Device.toJson(gatt!!.device, newState)
+            activity.runOnUiThread { channel.invokeMethod("onDeviceState", device) }
         }
     }
 }
