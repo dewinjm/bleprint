@@ -4,7 +4,6 @@
 // https://opensource.org/licenses/MIT
 
 import Flutter
-import UIKit
 import CoreBluetooth
 
 public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDelegate {
@@ -15,7 +14,7 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
     private var manager: CBCentralManager!
     private var result: FlutterResult!
     private var peripherals: NSMutableDictionary!
-    
+  
     init(fromChannel channel: FlutterMethodChannel) {
         self.channel = channel
     }
@@ -60,33 +59,34 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
     }
     
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        
         if peripheral.name != nil {
             self.peripherals.setValue(peripheral, forKey: peripheral.identifier.uuidString )
-            
-            let device : [String: Any] = [
-                "address" : peripheral.identifier.uuidString,
-                "name" : peripheral.name ?? "",
-                "isConnected" : peripheral.state == CBPeripheralState.connected,
-                "type" : 0
-            ]
-            
-            channel.invokeMethod("onScanResult", arguments: device)
+            channel.invokeMethod("onScanResult", arguments:  Device.toJson(peripheral: peripheral))
         }
     }
     
     public func centralManagerDidUpdateState(_ central: CBCentralManager){
         self.centralState = central.state
+        
+        switch(central.state) {
+        case .poweredOff:
+            emitDisconnectForAllDevices()
+            break
+             
+        default:
+            break
+        }
     }
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        self.peripherals.setValue(peripheral, forKey: peripheral.identifier.uuidString )
-        self.result?(true)
+        self.peripherals.setValue(peripheral, forKey: peripheral.identifier.uuidString)
+        channel.invokeMethod("onDeviceState", arguments: Device.toJson(peripheral: peripheral))
     }
     
     public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        //Cuando entre
         if(error != nil ) {
-            self.result?(FlutterError.init(code: "bluetooth_connect_failed", message: "device could not be connected", details: error))
+            self.result?(FlutterError.init(code: "bluetooth_connect_failed", message: "device could not be connected", details: "\(error!)"))
             return
         }
         self.result?(false)
@@ -94,12 +94,11 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
     
     public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         if(error != nil ) {
-            self.result?(FlutterError.init(code: "bluetooth_disconnect_failed", message: "device could not be disconnected", details: error))
-            return
+            self.result?(FlutterError.init(code: "bluetooth_disconnect_failed", message: "device could not be disconnected", details: "\(error!)"))
         }
-        self.result?(false)
+        channel.invokeMethod("onDeviceState", arguments: Device.toJson(peripheral: peripheral))
     }
-
+        
     private func hasStateError() -> FlutterError? {
         switch(self.centralState) {
         case .poweredOff:
@@ -176,6 +175,7 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
             return
         }
         
+        self.result?(nil)
         self.manager.connect(peripheral!, options: nil)
         
         var seconds =  SwiftBleprintPlugin.PERIOD_DEFAULT
@@ -190,6 +190,14 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
         }
     }
     
+    /// When Bluetooth is power off should emit disconnect state on all devices
+    private func emitDisconnectForAllDevices() {
+        self.peripherals.forEach { (key: Any, value: Any) in
+            let peripheral: CBPeripheral? = value as? CBPeripheral
+            channel.invokeMethod("onDeviceState", arguments: Device.toJson(peripheral: peripheral!))
+        }
+    }
+    
     private func disconnect(deviceAddress: String?) {
         let peripheral: CBPeripheral? = getPeripheral(deviceAddress: deviceAddress)
         
@@ -197,10 +205,10 @@ public class SwiftBleprintPlugin: NSObject, FlutterPlugin, CBCentralManagerDeleg
             return
         }
         
+        self.result?(nil)
+        
         if (peripheral!.state == CBPeripheralState.connecting || peripheral!.state == CBPeripheralState.connected) {
             self.manager.cancelPeripheralConnection(peripheral!)
-        } else {
-            self.result?(nil)
         }
     }
     
