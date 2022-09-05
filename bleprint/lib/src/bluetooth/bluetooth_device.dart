@@ -3,14 +3,15 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
+import 'dart:async';
+
 /// Bluetooth device model
 class BluetoothDevice {
   /// BluetoothDevice constructor
   BluetoothDevice({
     required this.name,
     required this.address,
-    this.type = 0,
-    this.isConnected = false,
+    this.state = BluetoothDeviceState.disconnected,
   });
 
   /// Convert Map to BluetoothDevice model
@@ -19,15 +20,12 @@ class BluetoothDevice {
   BluetoothDevice.fromJson(Map<String, dynamic> json)
       : name = json['name'] as String,
         address = json['address'] as String,
-        type = json['type'] as int?,
-        isConnected = json['isConnected'] as bool?;
+        state = BluetoothDeviceState.values[(json['state'] as int?) ?? 0];
 
   /// Convert BluetoothDevice model to map
   Map<String, dynamic> toJson() => {
         'name': name,
         'address': address,
-        'type': type,
-        'isConnected': isConnected,
       };
 
   /// Device name
@@ -36,24 +34,42 @@ class BluetoothDevice {
   /// Device MAC address
   final String address;
 
-  /// Device Type
-  final int? type;
+  /// Device state [BluetoothDeviceState]
+  final BluetoothDeviceState? state;
 
-  /// Device connect status
-  final bool? isConnected;
+  /// Bluetooth device state broadcast
+  final stateStreamController =
+      StreamController<BluetoothDeviceState>.broadcast();
+
+  /// Stream the current connection state of the device
+  Stream<BluetoothDeviceState> get stateListener =>
+      stateStreamController.stream;
 
   /// Creates a copy of BluetoothDevice but with the given fields
   /// replaced with the new values.
   BluetoothDevice copyWith({
     String? name,
     String? address,
-    int? type,
-    bool? isConnected,
+    BluetoothDeviceState? state,
   }) =>
       BluetoothDevice(
         name: name ?? this.name,
         address: address ?? this.address,
-        type: type ?? this.type,
-        isConnected: isConnected ?? this.isConnected,
+        state: state ?? this.state,
       );
+}
+
+/// Bluetooth device connection state
+enum BluetoothDeviceState {
+  /// When is in disconnected state
+  disconnected,
+
+  /// State when device is connecting
+  connecting,
+
+  /// When is in connected state
+  connected,
+
+  /// When is in disconnecting state
+  disconnecting,
 }

@@ -33,8 +33,6 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late BluetoothManager bluetoothManager;
-  bool _isScanning = false;
-  List<BluetoothDevice> _devices = <BluetoothDevice>[];
 
   @override
   void initState() {
@@ -55,8 +53,12 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _scanWidget(),
-                Column(
-                  children: _devices.map(_buildItem).toList(),
+                StreamBuilder<List<BluetoothDevice>>(
+                  stream: bluetoothManager.onScanResult,
+                  initialData: const [],
+                  builder: (_, snapshot) => Column(
+                    children: snapshot.data!.map(_buildItem).toList(),
+                  ),
                 ),
               ],
             ),
@@ -67,31 +69,37 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _scanWidget() {
-    return _isScanning
-        ? Column(
-            children: const [
-              Text('Wait bluetooth scan'),
-              SizedBox(height: 8),
-              CircularProgressIndicator(),
-            ],
-          )
-        : Column(
-            children: [
-              const Text('Please press scan button to start scanning'),
-              const SizedBox(height: 8),
-              ElevatedButton(
-                onPressed: _scanDevices,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    children: const [
-                      Text('Scan'),
-                    ],
+    return StreamBuilder<bool>(
+      initialData: false,
+      stream: bluetoothManager.isScanning,
+      builder: (context, snapshot) {
+        return (snapshot.data ?? false)
+            ? Column(
+                children: const [
+                  Text('Wait bluetooth scan'),
+                  SizedBox(height: 8),
+                  CircularProgressIndicator(),
+                ],
+              )
+            : Column(
+                children: [
+                  const Text('Please press scan button to start scanning'),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: _scanDevices,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        children: const [
+                          Text('Scan'),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          );
+                ],
+              );
+      },
+    );
   }
 
   Widget _buildItem(BluetoothDevice device) {
@@ -123,100 +131,62 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _connectButton(BluetoothDevice device) {
-    final isConnected = device.isConnected ?? false;
+    return StreamBuilder<BluetoothDeviceState>(
+      initialData: BluetoothDeviceState.disconnected,
+      stream: device.stateListener,
+      builder: (context, snapshot) {
+        final isConnected = snapshot.data == BluetoothDeviceState.connected;
+        final isLoading = snapshot.data == BluetoothDeviceState.connecting;
 
-    return ElevatedButton(
-      onPressed: () => isConnected ? _disconnect(device) : _connect(device),
-      style: ElevatedButton.styleFrom(
-        primary: isConnected ? Colors.red : Colors.blue,
-      ),
-      child: Text(isConnected ? 'Disconnect' : 'Connect'),
+        return ElevatedButton(
+          onPressed: () => isConnected ? _disconnect(device) : _connect(device),
+          style: ElevatedButton.styleFrom(
+            primary: isConnected ? Colors.red : Colors.blue,
+          ),
+          child: isLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : Text(isConnected ? 'Disconnect' : 'Connect'),
+        );
+      },
     );
   }
 
-  void _scanDevices() {
-    setState(() {
-      _isScanning = true;
-      _devices = <BluetoothDevice>[];
-    });
-
-    bluetoothManager.scanDevices(duration: const Duration(seconds: 4)).listen(
-      (devices) {
-        setState(() {
-          _devices = devices;
-          _isScanning = false;
-        });
-      },
-    ).onError((Object error, _) {
-      setState(() {
-        _isScanning = false;
-      });
-
-      _showError(error);
-    });
+  Future<void> _scanDevices() async {
+    try {
+      await bluetoothManager.scanDevices(duration: const Duration(seconds: 4));
+    } catch (ex) {
+      _showError(ex);
+    }
   }
 
   Future<void> _getBondedDevices() async {
-    setState(() {
-      _isScanning = true;
-      _devices = <BluetoothDevice>[];
-    });
-
     try {
-      final result = await bluetoothManager.bondedDevices();
-      _devices.addAll(result);
+      await bluetoothManager.bondedDevices();
     } catch (ex) {
       _showError(ex);
     }
-
-    setState(() {
-      _isScanning = false;
-    });
   }
 
   Future<void> _connect(BluetoothDevice device) async {
-    setState(() {
-      _isScanning = true;
-    });
-
     try {
-      final result = await bluetoothManager.connect(
+      await bluetoothManager.connect(
         device: device,
-        duration: const Duration(seconds: 5),
+        duration: const Duration(seconds: 10),
       );
-
-      setState(() {
-        final index = _devices.indexWhere((e) => e.address == device.address);
-        _devices[index] = device.copyWith(isConnected: result);
-      });
     } catch (ex) {
       _showError(ex);
     }
-
-    setState(() {
-      _isScanning = false;
-    });
   }
 
   Future<void> _disconnect(BluetoothDevice device) async {
-    setState(() {
-      _isScanning = true;
-    });
-
     try {
-      final result = await bluetoothManager.disconnect(device: device);
-
-      setState(() {
-        final index = _devices.indexWhere((e) => e.address == device.address);
-        _devices[index] = device.copyWith(isConnected: result);
-      });
+      await bluetoothManager.disconnect(device: device);
     } catch (ex) {
       _showError(ex);
     }
-
-    setState(() {
-      _isScanning = false;
-    });
   }
 
   void _showError(Object error) {
