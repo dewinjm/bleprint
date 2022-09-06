@@ -5,7 +5,6 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-import 'package:bleprint/bleprint.dart';
 import 'package:bleprint_platform_interface/bleprint_platform_interface.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -24,28 +23,6 @@ void main() {
     setUp(() {
       bleprintPlatform = MockBleprintPlatform();
       BleprintPlatform.instance = bleprintPlatform;
-    });
-
-    group('getPlatformName', () {
-      test('returns correct name when platform implementation exists',
-          () async {
-        const platformName = '__test_platform__';
-        when(
-          () => bleprintPlatform.getPlatformName(),
-        ).thenAnswer((_) async => platformName);
-
-        final actualPlatformName = await getPlatformName();
-        expect(actualPlatformName, equals(platformName));
-      });
-
-      test('throws exception when platform implementation is missing',
-          () async {
-        when(
-          () => bleprintPlatform.getPlatformName(),
-        ).thenAnswer((_) async => null);
-
-        expect(getPlatformName, throwsException);
-      });
     });
   });
 }

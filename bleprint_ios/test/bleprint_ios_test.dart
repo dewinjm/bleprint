@@ -12,7 +12,6 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('BleprintIOS', () {
-    const kPlatformName = 'iOS';
     const mockDevicesJson = [
       {
         'name': 'device #1',
@@ -41,8 +40,6 @@ void main() {
         log.add(methodCall);
 
         switch (methodCall.method) {
-          case 'getPlatformName':
-            return kPlatformName;
           case 'scan':
             return Future.value();
           case 'isAvailable':
@@ -72,15 +69,6 @@ void main() {
     test('can be registered', () {
       BleprintIOS.registerWith();
       expect(BleprintPlatform.instance, isA<BleprintIOS>());
-    });
-
-    test('getPlatformName returns correct name', () async {
-      final name = await bleprint.getPlatformName();
-      expect(
-        log,
-        <Matcher>[isMethodCall('getPlatformName', arguments: null)],
-      );
-      expect(name, equals(kPlatformName));
     });
 
     test('verify to scan is called', () async {

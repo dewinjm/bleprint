@@ -34,9 +34,6 @@ abstract class BleprintPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  /// Return the current platform name.
-  Future<String?> getPlatformName();
-
   /// Starts scan Bluetooth devices
   ///
   /// Timer in milliseconds to stop scanning [duration]

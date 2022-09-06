@@ -31,10 +31,6 @@ class BleprintAndroid extends BleprintPlatform {
   }
 
   @override
-  Future<String?> getPlatformName() =>
-      methodChannel.invokeMethod<String>('getPlatformName');
-
-  @override
   Future<void> scan({required int duration}) =>
       methodChannel.invokeMethod('scan', duration);
 

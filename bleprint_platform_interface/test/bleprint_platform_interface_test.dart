@@ -9,7 +9,6 @@ import 'package:flutter/src/services/message_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class BleprintMock extends BleprintPlatform {
-  static const mockPlatformName = 'Mock';
   static const mockDevicesJson = [
     {
       'name': 'device #1',
@@ -27,9 +26,6 @@ class BleprintMock extends BleprintPlatform {
 
   final StreamController<MethodCall> _streamController =
       StreamController.broadcast();
-
-  @override
-  Future<String?> getPlatformName() async => mockPlatformName;
 
   @override
   Future<void> scan({required int duration}) async {}
@@ -69,15 +65,6 @@ void main() {
     setUp(() {
       bleprintPlatform = BleprintMock();
       BleprintPlatform.instance = bleprintPlatform;
-    });
-
-    group('getPlatformName', () {
-      test('returns correct name', () async {
-        expect(
-          await BleprintPlatform.instance.getPlatformName(),
-          equals(BleprintMock.mockPlatformName),
-        );
-      });
     });
 
     group('scan', () {

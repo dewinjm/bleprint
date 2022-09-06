@@ -21,11 +21,6 @@ class MethodChannelBleprint extends BleprintPlatform {
       StreamController.broadcast();
 
   @override
-  Future<String?> getPlatformName() async {
-    return methodChannel.invokeMethod<String>('getPlatformName');
-  }
-
-  @override
   Future<void> scan({required int duration}) async {
     return methodChannel.invokeMethod('scan');
   }
