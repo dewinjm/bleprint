@@ -2,13 +2,9 @@ package com.dewinjm.bleprint
 
 import android.Manifest
 import android.app.Activity
-import android.bluetooth.BluetoothAdapter
+import android.bluetooth.*
 import android.bluetooth.BluetoothAdapter.LeScanCallback
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
+import android.bluetooth.le.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -44,11 +40,13 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     private lateinit var methodResult: MethodResult
     private lateinit var channel: MethodChannel
     private var context: Context? = null
+    private var bluetoothManager: BluetoothManager? = null
     private var bluetoothAdapter: BluetoothAdapter? = null
     private var bluetoothLeScanner: BluetoothLeScanner? = null
     private var isScanning = false
     private var scanPeriod = DEFAULT_SCAN_PERIOD
     private val handler = Handler(Looper.getMainLooper())
+    private val mDevices: MutableMap<String, BluetoothDeviceCache> = HashMap()
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activity = binding.activity
@@ -60,15 +58,20 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         onAttachedToActivity(binding)
     }
 
-    override fun onDetachedFromActivity() {}
-    override fun onDetachedFromActivityForConfigChanges() {}
+    override fun onDetachedFromActivity() {
+        tearDown()
+    }
+
+    override fun onDetachedFromActivityForConfigChanges() {
+        onDetachedFromActivity()
+    }
 
     override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, "bleprint_android")
         channel.setMethodCallHandler(this)
         context = flutterPluginBinding.applicationContext
 
-        val bluetoothManager =
+        bluetoothManager =
             flutterPluginBinding
                 .applicationContext
                 .getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager?
@@ -81,9 +84,15 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
+        tearDown()
+    }
+
+    private fun tearDown() {
         channel.setMethodCallHandler(null)
         context = null
         methodResult.dispose()
+        bluetoothAdapter = null
+        bluetoothManager = null
     }
 
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
@@ -100,6 +109,8 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
                 startScan()
             }
             "paired" -> getBondedDevices()
+            "connect" -> connect(call.arguments)
+            "disconnect" -> disconnect(call.arguments)
             else -> result.notImplemented()
         }
     }
@@ -197,8 +208,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             return
         if (!isLeScannerAvailable())
             return
-
-        methodResult.success(null)
+ 
         if (isScanning) {
             stopScan()
             scanLeDevice()
@@ -220,10 +230,12 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
             val settings =
                 ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
 
-            bluetoothLeScanner!!.startScan(null, settings, scanCallback)
+            val filters: List<ScanFilter> = ArrayList()
+            bluetoothLeScanner!!.startScan(filters, settings, scanCallback)
         } else {
             bluetoothAdapter!!.startLeScan(leScanCallback)
         }
+        methodResult.success(null)
     }
 
     private fun stopScan() {
@@ -250,6 +262,7 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
     object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val map = Device.toJson(result.device)
+
             if (map != null) {
                 activity.runOnUiThread { channel.invokeMethod("onScanResult", map) }
             }
@@ -273,5 +286,113 @@ class BleprintPlugin : FlutterPlugin, MethodCallHandler, ActivityAware,
         }
 
         methodResult.success(devices)
+    }
+
+    private fun getPeripheral(address: String?): BluetoothDevice? {
+        if (address == null) {
+            methodResult.sendError("bluetooth_address_null", "address cannot be null")
+            return null
+        }
+
+        val device = bluetoothAdapter!!.getRemoteDevice(address)
+        if (device == null) {
+            methodResult.sendError("bluetooth_address_not_found", "the device address is not found")
+            return null
+        }
+        return device
+    }
+
+    private fun connect(arguments: Any) {
+        if (!isPermissionGranted(PAIR_REQUEST_PERMISSION))
+            return
+        if (!isBluetoothEnable(PAIR_REQUEST_BLUETOOTH_ENABLE))
+            return
+
+        val arg = arguments as ArrayList<*>
+        val address = arg[0] as String?
+        val timeOut = (arg[1] as Int).toLong()
+
+        val device = getPeripheral(address) ?: return
+        if (isScanning)
+            stopScan()
+
+        val autoConnect = true
+        val deviceId = device.address
+        val isConnected: Boolean =
+            bluetoothManager!!.getConnectedDevices(BluetoothProfile.GATT).contains(device)
+
+        if (mDevices.containsKey(deviceId) && isConnected) {
+            methodResult.sendError("already_connected", "connection with device already exists")
+            return
+        }
+ 
+        if (mDevices.containsKey(deviceId) && !isConnected) {
+            if (!mDevices[deviceId]!!.gatt!!.connect()) {
+                methodResult.sendError("reconnect_error", "error when reconnecting to device")
+                return
+            }
+        }
+
+        val gattServer: BluetoothGatt = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            device.connectGatt(
+                context,
+                autoConnect,
+                gattCallback,
+                BluetoothDevice.TRANSPORT_LE
+            )
+        } else {
+            device.connectGatt(context, autoConnect, gattCallback)
+        }
+
+        handler.postDelayed({
+            val state: Int = bluetoothManager!!.getConnectionState(device, BluetoothProfile.GATT)
+            if (state == BluetoothProfile.STATE_DISCONNECTED) {
+                gattServer.disconnect()
+                gattServer.close()
+            }
+        }, timeOut)
+
+        mDevices[device.address] = BluetoothDeviceCache(gattServer)
+        methodResult.success(null)
+    }
+
+    private fun disconnect(arguments: Any) {
+        if (!isPermissionGranted(PAIR_REQUEST_PERMISSION))
+            return
+        if (!isBluetoothEnable(PAIR_REQUEST_BLUETOOTH_ENABLE))
+            return
+
+        val address = arguments as String?
+        val device = getPeripheral(address) ?: return
+        if (isScanning)
+            stopScan()
+
+        val deviceId = device.address
+        val state: Int = bluetoothManager!!.getConnectionState(device, BluetoothProfile.GATT)
+        val cache = mDevices.remove(deviceId)
+
+        if (cache != null) {
+            val gattServer = cache.gatt
+            gattServer!!.disconnect()
+            if (state == BluetoothProfile.STATE_DISCONNECTED) {
+                gattServer.close()
+            }
+        }
+        methodResult.success(null)
+    }
+
+    private val gattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
+        override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
+            Logger.log("[onConnectionStateChange] newState: $newState")
+
+            if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                if (!mDevices.containsKey(gatt!!.device.address)) {
+                    gatt.close()
+                }
+            }
+
+            val device = Device.toJson(gatt!!.device, newState)
+            activity.runOnUiThread { channel.invokeMethod("onDeviceState", device) }
+        }
     }
 }

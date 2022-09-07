@@ -21,11 +21,6 @@ class MethodChannelBleprint extends BleprintPlatform {
       StreamController.broadcast();
 
   @override
-  Future<String?> getPlatformName() async {
-    return methodChannel.invokeMethod<String>('getPlatformName');
-  }
-
-  @override
   Future<void> scan({required int duration}) async {
     return methodChannel.invokeMethod('scan');
   }
@@ -49,5 +44,20 @@ class MethodChannelBleprint extends BleprintPlatform {
     return objects != null
         ? objects.map((e) => Map<String, dynamic>.from(e as Map)).toList()
         : [];
+  }
+
+  @override
+  Future<bool> connect({required String deviceAddress, required int duration}) {
+    return methodChannel.invokeMethod<bool>(
+      'connect',
+      [deviceAddress, duration],
+    ).then((value) => value ?? false);
+  }
+
+  @override
+  Future<bool> disconnect({required String deviceAddress}) async {
+    return methodChannel
+        .invokeMethod<bool>('disconnect', deviceAddress)
+        .then((value) => value ?? false);
   }
 }

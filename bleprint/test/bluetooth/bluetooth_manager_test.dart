@@ -70,7 +70,8 @@ void main() {
 
     group('scanDevices', () {
       test('should return onScanResult method stream', () async {
-        const duration = Duration(milliseconds: 1000);
+        const duration = Duration(milliseconds: 500);
+
         when(
           () => bleprintPlatform.scan(duration: duration.inMilliseconds),
         ).thenAnswer((_) async => Future.value());
@@ -93,11 +94,19 @@ void main() {
           });
         });
 
-        bluetoothManager.scanDevices(duration: duration).listen(
+        bluetoothManager.isScanning.listen(
+          expectAsync1((value) {
+            expect(value, isTrue);
+          }),
+        );
+
+        await bluetoothManager.scanDevices(duration: duration);
+
+        bluetoothManager.onScanResult.listen(
           expectAsync1(
-            (device) {
-              expect(device!.name, equals(fakeDevice.name));
-              expect(device.address, equals(fakeDevice.address));
+            (devices) {
+              expect(devices.length, equals(1));
+              expect(devices.first.name, equals(fakeDevice.name));
             },
           ),
         );
@@ -120,10 +129,12 @@ void main() {
           return Stream.value(MethodCall('onStopScan', fakeDevice.toJson()));
         });
 
-        bluetoothManager.scanDevices(duration: duration).listen(
+        await bluetoothManager.scanDevices(duration: duration);
+
+        bluetoothManager.onScanResult.listen(
           expectAsync1(
             (device) {
-              expect(device, isNull);
+              expect(device, List<BluetoothDevice>.empty());
             },
           ),
         );
@@ -131,23 +142,19 @@ void main() {
 
       test('should throw Exception when has error', () async {
         const duration = Duration(milliseconds: 1000);
+
         when(
           () => bleprintPlatform.scan(duration: duration.inMilliseconds),
         ).thenThrow(Exception('Fake Error'));
 
-        final fakeDevice = BluetoothDevice(
-          name: 'deviceABC',
-          address: 'address',
-        );
-
-        final method = MethodCall('onScanResult', fakeDevice.toJson());
+        const method = MethodCall('otherMethod');
 
         when(() => bleprintPlatform.methodStream).thenAnswer((_) {
           return Stream.value(method);
         });
 
-        final stream = bluetoothManager.scanDevices(duration: duration);
-        await expectLater(stream, emitsInOrder([]));
+        final res = bluetoothManager.scanDevices(duration: duration);
+        expect(res, throwsA(isA<Exception>()));
       });
     });
 
@@ -175,6 +182,155 @@ void main() {
         final result = await bluetoothManager.bondedDevices();
         expect(result, isList);
         expect(result.length, equals(2));
+      });
+    });
+
+    group('connect', () {
+      test('should return true when connection is successfull', () async {
+        const devicesAddress = 'mockAddress';
+        const timeout = 2000;
+
+        when(
+          () => bleprintPlatform.connect(
+            deviceAddress: devicesAddress,
+            duration: timeout,
+          ),
+        ).thenAnswer((_) async => true);
+
+        final device = BluetoothDevice(
+          name: 'Device abc',
+          address: devicesAddress,
+        );
+
+        final deviceResponse = {
+          'name': 'Device abs',
+          'address': 'mockAddress',
+          'state': 2
+        };
+
+        final scanResult = MethodCall('onScanResult', device.toJson());
+        final deviceState = MethodCall('onDeviceState', deviceResponse);
+
+        when(
+          () => bleprintPlatform.methodStream,
+        ).thenAnswer((_) {
+          return Stream.multi((met) {
+            met
+              ..add(scanResult)
+              ..add(deviceState);
+          });
+        });
+
+        final result = bluetoothManager.connect(
+          device: device,
+          duration: const Duration(milliseconds: timeout),
+        );
+
+        expect(result, completes);
+
+        bluetoothManager.onScanResult.listen((devices) {
+          devices[0].stateListener.listen(
+            expectAsync1((state) {
+              expect(state, equals(BluetoothDeviceState.connected));
+            }),
+          );
+        });
+      });
+
+      test('should throw Exception when has error', () {
+        const devicesAddress = 'mockAddress';
+        const timeout = 2000;
+
+        when(
+          () => bleprintPlatform.connect(
+            deviceAddress: devicesAddress,
+            duration: timeout,
+          ),
+        ).thenThrow(Exception('Fake Exception'));
+
+        when(() => bleprintPlatform.methodStream).thenAnswer((_) {
+          return Stream.value(const MethodCall('otherMethod'));
+        });
+
+        final device = BluetoothDevice(
+          name: 'Device abc',
+          address: devicesAddress,
+        );
+
+        final result = bluetoothManager.connect(
+          device: device,
+          duration: const Duration(milliseconds: timeout),
+        );
+
+        expect(result, throwsA(isA<Exception>()));
+      });
+    });
+
+    group('disconnect', () {
+      test(
+        'should return false when disconnection is successfull',
+        () async {
+          const devicesAddress = 'mockAddress';
+
+          when(
+            () => bleprintPlatform.disconnect(deviceAddress: devicesAddress),
+          ).thenAnswer((_) async => true);
+
+          final device = BluetoothDevice(
+            name: 'Device abc',
+            address: devicesAddress,
+          );
+
+          final deviceResponse = {
+            'name': 'Device abs',
+            'address': 'mockAddress',
+            'state': 0
+          };
+
+          final scanResult = MethodCall('onScanResult', device.toJson());
+          final deviceState = MethodCall('onDeviceState', deviceResponse);
+
+          when(
+            () => bleprintPlatform.methodStream,
+          ).thenAnswer((_) {
+            return Stream.multi((met) {
+              met
+                ..add(scanResult)
+                ..add(deviceState);
+            });
+          });
+
+          final result = bluetoothManager.disconnect(device: device);
+          expect(result, completes);
+
+          bluetoothManager.onScanResult.listen((devices) {
+            devices[0].stateListener.listen(
+              expectAsync1((state) {
+                expect(state, equals(BluetoothDeviceState.disconnected));
+              }),
+            );
+          });
+        },
+      );
+
+      test('should throw Exception when has error', () {
+        const devicesAddress = 'mockAddress';
+
+        when(
+          () => bleprintPlatform.disconnect(deviceAddress: devicesAddress),
+        ).thenThrow(Exception('Fake Exception'));
+
+        when(() => bleprintPlatform.methodStream).thenAnswer((_) {
+          return Stream.value(const MethodCall('otherMethod'));
+        });
+
+        final device = BluetoothDevice(
+          name: 'Device abc',
+          address: devicesAddress,
+        );
+
+        final result = bluetoothManager.disconnect(device: device);
+        expect(result, throwsA(isA<Exception>()));
       });
     });
   });

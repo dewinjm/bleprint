@@ -9,7 +9,6 @@ import 'package:flutter/src/services/message_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class BleprintMock extends BleprintPlatform {
-  static const mockPlatformName = 'Mock';
   static const mockDevicesJson = [
     {
       'name': 'device #1',
@@ -29,9 +28,6 @@ class BleprintMock extends BleprintPlatform {
       StreamController.broadcast();
 
   @override
-  Future<String?> getPlatformName() async => mockPlatformName;
-
-  @override
   Future<void> scan({required int duration}) async {}
 
   @override
@@ -46,6 +42,18 @@ class BleprintMock extends BleprintPlatform {
   @override
   Future<List<Map<String, dynamic>>> bondedDevices() =>
       Future.value(mockDevicesJson);
+
+  @override
+  Future<bool> connect({
+    required String deviceAddress,
+    required int duration,
+  }) async =>
+      true;
+
+  @override
+  Future<bool> disconnect({required String deviceAddress}) async {
+    return false;
+  }
 }
 
 void main() {
@@ -57,15 +65,6 @@ void main() {
     setUp(() {
       bleprintPlatform = BleprintMock();
       BleprintPlatform.instance = bleprintPlatform;
-    });
-
-    group('getPlatformName', () {
-      test('returns correct name', () async {
-        expect(
-          await BleprintPlatform.instance.getPlatformName(),
-          equals(BleprintMock.mockPlatformName),
-        );
-      });
     });
 
     group('scan', () {
@@ -103,6 +102,29 @@ void main() {
         expect(
           await BleprintPlatform.instance.bondedDevices(),
           BleprintMock.mockDevicesJson,
+        );
+      });
+    });
+
+    group('connect', () {
+      test('should return true when connection is successful', () async {
+        expect(
+          await BleprintPlatform.instance.connect(
+            deviceAddress: 'fake_address',
+            duration: 2000,
+          ),
+          isTrue,
+        );
+      });
+    });
+
+    group('disconnect', () {
+      test('should return false when disconnection is successful', () async {
+        expect(
+          await BleprintPlatform.instance.disconnect(
+            deviceAddress: 'fake_address',
+          ),
+          isFalse,
         );
       });
     });

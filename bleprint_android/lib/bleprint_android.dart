@@ -31,10 +31,6 @@ class BleprintAndroid extends BleprintPlatform {
   }
 
   @override
-  Future<String?> getPlatformName() =>
-      methodChannel.invokeMethod<String>('getPlatformName');
-
-  @override
   Future<void> scan({required int duration}) =>
       methodChannel.invokeMethod('scan', duration);
 
@@ -61,5 +57,20 @@ class BleprintAndroid extends BleprintPlatform {
     return objects != null
         ? objects.map((e) => Map<String, dynamic>.from(e as Map)).toList()
         : [];
+  }
+
+  @override
+  Future<bool> connect({required String deviceAddress, required int duration}) {
+    return methodChannel.invokeMethod<bool>(
+      'connect',
+      [deviceAddress, duration],
+    ).then((value) => value ?? false);
+  }
+
+  @override
+  Future<bool> disconnect({required String deviceAddress}) async {
+    return methodChannel
+        .invokeMethod<bool>('disconnect', deviceAddress)
+        .then((value) => value ?? false);
   }
 }

@@ -6,4 +6,3 @@
 // https://opensource.org/licenses/MIT.
 
 export 'src/bluetooth/bluetooth.dart';
-export 'src/platform_name.dart';

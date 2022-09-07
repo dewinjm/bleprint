@@ -9,7 +9,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  const kPlatformName = 'platformName';
 
   const mockDevicesJson = [
     {
@@ -37,8 +36,6 @@ void main() {
           log.add(methodCall);
 
           switch (methodCall.method) {
-            case 'getPlatformName':
-              return kPlatformName;
             case 'scan':
               return Future.value();
             case 'isAvailable':
@@ -47,6 +44,10 @@ void main() {
               return true;
             case 'paired':
               return isPairedNull ? null : mockDevicesJson;
+            case 'connect':
+              return true;
+            case 'disconnect':
+              return false;
             case 'mockInvoke':
               {
                 methodChannelBleprint.methodChannel.setMethodCallHandler(
@@ -66,15 +67,6 @@ void main() {
     tearDown(() {
       log.clear();
       isPairedNull = false;
-    });
-
-    test('getPlatformName', () async {
-      final platformName = await methodChannelBleprint.getPlatformName();
-      expect(
-        log,
-        <Matcher>[isMethodCall('getPlatformName', arguments: null)],
-      );
-      expect(platformName, equals(kPlatformName));
     });
 
     test('scan', () async {
@@ -124,6 +116,29 @@ void main() {
         expect(log, <Matcher>[isMethodCall('paired', arguments: null)]);
         expect(result, equals([]));
       });
+    });
+
+    test('connect', () async {
+      final value = await methodChannelBleprint.connect(
+        deviceAddress: 'deviceAddress',
+        duration: 1000,
+      );
+
+      expect(log, <Matcher>[
+        isMethodCall('connect', arguments: ['deviceAddress', 1000]),
+      ]);
+      expect(value, isTrue);
+    });
+
+    test('disconnect', () async {
+      final value = await methodChannelBleprint.disconnect(
+        deviceAddress: 'deviceAddress',
+      );
+
+      expect(log, <Matcher>[
+        isMethodCall('disconnect', arguments: 'deviceAddress'),
+      ]);
+      expect(value, isFalse);
     });
   });
 }
